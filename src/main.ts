@@ -1,16 +1,12 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
+import checkQualityGate from './checkQualityGate';
 
 async function run(): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
+    const token = core.getInput('sonarToken');
+    const organization = core.getInput('sonarOrganization');
 
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
+    await checkQualityGate(token, organization);
   } catch (error) {
     core.setFailed(error.message)
   }
