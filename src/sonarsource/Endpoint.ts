@@ -12,12 +12,12 @@ export const PROP_NAMES = {
 
 export default class Endpoint {
   constructor(
-    public readonly url: string,
-    public readonly token: string,
-    public readonly organization: string
+    readonly url: string,
+    readonly token: string,
+    readonly organization: string
   ) {}
 
-  public toSonarProps() {
+  toSonarProps(): {[prop: string]: string} {
     return {
       [PROP_NAMES.HOST_URL]: this.url,
       [PROP_NAMES.LOGIN]: this.token,
@@ -25,7 +25,7 @@ export default class Endpoint {
     }
   }
 
-  public static getEndpoint(token: string, organization: string) {
+  static getEndpoint(token: string, organization: string): Endpoint {
     return new Endpoint('https://sonarcloud.io', token, organization)
   }
 }

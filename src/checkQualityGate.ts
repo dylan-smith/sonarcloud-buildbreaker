@@ -8,12 +8,12 @@ import Task, {TimeOutReachedError} from './sonarsource/Task'
 export default async function checkQualityGateTask(
   token: string,
   organization: string
-) {
+): Promise<void> {
   const endpoint = Endpoint.getEndpoint(token, organization)
 
   const metrics = await Metrics.getAllMetrics(endpoint)
 
-  if (!!!metrics) {
+  if (!metrics) {
     core.setFailed('Unable to connect to the SonarCloud metrics API endpoint')
     return
   }
@@ -22,13 +22,13 @@ export default async function checkQualityGateTask(
   const taskReports = await TaskReport.createTaskReportsFromFiles(endpoint)
 
   const analyses = await Promise.all<Analysis>(
-    taskReports.map(taskReport =>
+    taskReports.map(async taskReport =>
       getReportForTask(taskReport, metrics, endpoint, timeoutSec)
     )
   )
 
-  console.log(`Number of analyses in this build: ${taskReports.length}`)
-  console.log(
+  core.info(`Number of analyses in this build: ${taskReports.length}`)
+  core.info(
     `Summary of statusses: ${analyses.map(a => `"${a.status}"`).join(', ')}`
   )
 

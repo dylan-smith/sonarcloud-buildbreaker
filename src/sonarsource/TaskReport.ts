@@ -25,29 +25,16 @@ export default class TaskReport {
     this.report = report as ITaskReport
   }
 
-  // public get projectKey() {
-  //   return this.report.projectKey;
-  // }
-
-  public get ceTaskId() {
+  get ceTaskId(): string {
     return this.report.ceTaskId
   }
 
-  // public get serverUrl() {
-  //   return this.report.serverUrl;
-  // }
-
-  public get dashboardUrl() {
+  get dashboardUrl(): string | undefined {
     return this.report.dashboardUrl
   }
 
-  public static async findTaskFileReport(
-    endpoint: Endpoint
-  ): Promise<string[]> {
-    let taskReportGlob: string
-    let taskReportGlobResult: string[]
-
-    taskReportGlob = path.join(
+  static async findTaskFileReport(): Promise<string[]> {
+    const taskReportGlob = path.join(
       '.sonarqube',
       'out',
       '.sonar',
@@ -55,7 +42,7 @@ export default class TaskReport {
       REPORT_TASK_NAME
     )
     const globber = await glob.create(taskReportGlob)
-    taskReportGlobResult = await globber.glob()
+    const taskReportGlobResult = await globber.glob()
 
     core.debug(
       `[SQ] Searching for ${taskReportGlob} - found ${taskReportGlobResult.length} file(s)`
@@ -63,13 +50,13 @@ export default class TaskReport {
     return taskReportGlobResult
   }
 
-  public static async createTaskReportsFromFiles(
+  static async createTaskReportsFromFiles(
     endpoint: Endpoint,
     filePaths?: string[]
   ): Promise<TaskReport[]> {
-    filePaths = filePaths || (await TaskReport.findTaskFileReport(endpoint))
+    filePaths = filePaths || (await TaskReport.findTaskFileReport())
     return await Promise.all(
-      filePaths.map(filePath => {
+      filePaths.map(async filePath => {
         if (!filePath) {
           return Promise.reject(
             TaskReport.throwInvalidReport(
@@ -79,57 +66,54 @@ export default class TaskReport {
           )
         }
         core.debug(`[SQ] Read Task report file: ${filePath}`)
-        return fs.access(filePath, fs.constants.R_OK).then(
-          () => this.parseReportFile(filePath),
-          () => {
-            return Promise.reject(
-              TaskReport.throwInvalidReport(
-                `[SQ] Task report not found at: ${filePath}`
-              )
-            )
-          }
-        )
+
+        try {
+          await fs.access(filePath, fs.constants.R_OK)
+        } catch (err) {
+          TaskReport.throwInvalidReport(
+            `[SQ] Task report not found at: ${filePath}`
+          )
+        }
+
+        return this.parseReportFile(filePath)
       })
     )
   }
 
-  private static parseReportFile(filePath: string): Promise<TaskReport> {
-    return fs.readFile(filePath, 'utf-8').then(
-      fileContent => {
-        core.debug(`[SQ] Parse Task report file: ${fileContent}`)
-        if (!fileContent || fileContent.length <= 0) {
-          return Promise.reject(
-            TaskReport.throwInvalidReport(
-              `[SQ] Error reading file: ${fileContent}`
-            )
-          )
-        }
-        try {
-          const settings = TaskReport.createTaskReportFromString(fileContent)
-          const taskReport = new TaskReport({
-            ceTaskId: settings.get('ceTaskId'),
-            ceTaskUrl: settings.get('ceTaskUrl'),
-            dashboardUrl: settings.get('dashboardUrl'),
-            projectKey: settings.get('projectKey'),
-            serverUrl: settings.get('serverUrl')
-          })
-          return Promise.resolve(taskReport)
-        } catch (err) {
-          if (err && err.message) {
-            core.error(`[SQ] Parse Task report error: ${err.message}`)
-          } else if (err) {
-            core.error(`[SQ] Parse Task report error: ${JSON.stringify(err)}`)
-          }
-          return Promise.reject(err)
-        }
-      },
-      err =>
-        Promise.reject(
-          TaskReport.throwInvalidReport(
-            `[SQ] Error reading file: ${err.message || JSON.stringify(err)}`
-          )
+  private static async parseReportFile(filePath: string): Promise<TaskReport> {
+    try {
+      const fileContent = await fs.readFile(filePath, 'utf-8')
+
+      core.debug(`[SQ] Parse Task report file: ${fileContent}`)
+      if (!fileContent || fileContent.length <= 0) {
+        throw TaskReport.throwInvalidReport(
+          `[SQ] Error reading file: ${fileContent}`
         )
-    )
+      }
+
+      try {
+        const settings = TaskReport.createTaskReportFromString(fileContent)
+        const taskReport = new TaskReport({
+          ceTaskId: settings.get('ceTaskId'),
+          ceTaskUrl: settings.get('ceTaskUrl'),
+          dashboardUrl: settings.get('dashboardUrl'),
+          projectKey: settings.get('projectKey'),
+          serverUrl: settings.get('serverUrl')
+        })
+        return taskReport
+      } catch (err) {
+        if (err && err.message) {
+          core.error(`[SQ] Parse Task report error: ${err.message}`)
+        } else if (err) {
+          core.error(`[SQ] Parse Task report error: ${JSON.stringify(err)}`)
+        }
+        throw err
+      }
+    } catch (err) {
+      throw TaskReport.throwInvalidReport(
+        `[SQ] Error reading file: ${err.message || JSON.stringify(err)}`
+      )
+    }
   }
 
   private static createTaskReportFromString(
@@ -137,7 +121,7 @@ export default class TaskReport {
   ): Map<string, string> {
     const lines: string[] = fileContent.replace(/\r\n/g, '\n').split('\n') // proofs against xplat line-ending issues
     const settings = new Map<string, string>()
-    lines.forEach((line: string) => {
+    for (const line of lines) {
       const splitLine = line.split('=')
       if (splitLine.length > 1) {
         settings.set(
@@ -145,7 +129,7 @@ export default class TaskReport {
           splitLine.slice(1, splitLine.length).join('=')
         )
       }
-    })
+    }
     return settings
   }
 

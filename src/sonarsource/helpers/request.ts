@@ -3,17 +3,17 @@ import * as core from '@actions/core'
 import Endpoint from '../Endpoint'
 
 interface RequestData {
-  [x: string]: any
+  [x: string]: any // eslint-disable-line @typescript-eslint/no-explicit-any
 }
 
-function get(
+async function get<T>(
   endpoint: Endpoint,
   path: string,
   isJson: boolean,
   query?: RequestData
-): Promise<any> {
+): Promise<T> {
   core.debug(`[SQ] API GET: '${path}' with query "${JSON.stringify(query)}"`)
-  return new Promise((resolve, reject) => {
+  return new Promise<T>((resolve, reject) => {
     const options: request.CoreOptions = {
       auth: {user: endpoint.token}
     }
@@ -53,19 +53,20 @@ function get(
   })
 }
 
-function isString(x: any) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function isString(x: any): boolean {
   return Object.prototype.toString.call(x) === '[object String]'
 }
 
-export function getJSON(
+export async function getJSON<T>(
   endpoint: Endpoint,
   path: string,
   query?: RequestData
-): Promise<any> {
-  return get(endpoint, path, true, query)
+): Promise<T> {
+  return get<T>(endpoint, path, true, query)
 }
 
-function logAndReject(reject: (reason?: any) => void, errMsg: string) {
+function logAndReject(reject: (reason?: Error) => void, errMsg: string): void {
   core.debug(errMsg)
   return reject(new Error(errMsg))
 }

@@ -26,11 +26,11 @@ export default class Analysis {
     private readonly projectName?: string
   ) {}
 
-  public get status() {
+  get status(): string {
     return this.analysis.status.toUpperCase()
   }
 
-  public static getAnalysis({
+  static async getAnalysis({
     analysisId,
     projectName,
     endpoint,
@@ -44,19 +44,41 @@ export default class Analysis {
     metrics?: Metrics
   }): Promise<Analysis> {
     core.debug(`[SQ] Retrieve Analysis id '${analysisId}.'`)
-    return getJSON(endpoint, '/api/qualitygates/project_status', {
-      analysisId
-    }).then(
-      ({projectStatus}: {projectStatus: IAnalysis}) =>
-        new Analysis(projectStatus, dashboardUrl, metrics, projectName),
-      err => {
-        if (err && err.message) {
-          core.error(`[SQ] Error retrieving analysis: ${err.message}`)
-        } else if (err) {
-          core.error(`[SQ] Error retrieving analysis: ${JSON.stringify(err)}`)
-        }
-        throw new Error(`[SQ] Could not fetch analysis for ID '${analysisId}'`)
+
+    try {
+      const projectStatus = await getJSON<{projectStatus: IAnalysis}>(
+        endpoint,
+        '/api/qualitygates/project_status',
+        {analysisId}
+      )
+
+      return new Analysis(
+        projectStatus.projectStatus,
+        dashboardUrl,
+        metrics,
+        projectName
+      )
+    } catch (err) {
+      if (err && err.message) {
+        core.error(`[SQ] Error retrieving analysis: ${err.message}`)
+      } else if (err) {
+        core.error(`[SQ] Error retrieving analysis: ${JSON.stringify(err)}`)
       }
-    )
+      throw new Error(`[SQ] Could not fetch analysis for ID '${analysisId}'`)
+    }
+    // return getJSON(endpoint, '/api/qualitygates/project_status', {
+    //   analysisId
+    // }).then(
+    //   ({projectStatus}: {projectStatus: IAnalysis}) =>
+    //     new Analysis(projectStatus, dashboardUrl, metrics, projectName),
+    //   err => {
+    //     if (err && err.message) {
+    //       core.error(`[SQ] Error retrieving analysis: ${err.message}`)
+    //     } else if (err) {
+    //       core.error(`[SQ] Error retrieving analysis: ${JSON.stringify(err)}`)
+    //     }
+    //     throw new Error(`[SQ] Could not fetch analysis for ID '${analysisId}'`)
+    //   }
+    // )
   }
 }
