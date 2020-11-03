@@ -2,12 +2,6 @@ import * as core from '@actions/core'
 import Endpoint from './Endpoint';
 import { getJSON } from './helpers/request';
 
-
-
-// import * as tl from 'azure-pipelines-task-lib/task';
-// import Endpoint from './Endpoint';
-// import { getJSON } from '../helpers/request';
-
 interface IMetric {
   custom?: boolean;
   decimalScale?: number;
@@ -30,10 +24,6 @@ interface MetricsResponse {
 
 export default class Metrics {
   constructor(public metrics: IMetric[]) {}
-
-  public getMetricByKey(key: string) {
-    return this.metrics.find(metric => metric.key === key);
-  }
 
   public static getAllMetrics(endpoint: Endpoint): Promise<Metrics | undefined> {
     return inner().catch(err => {

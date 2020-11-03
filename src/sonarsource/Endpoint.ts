@@ -1,31 +1,17 @@
-import { PROP_NAMES } from './helpers/utils';
-
-// export interface EndpointData {
-//   url: string;
-//   token?: string;
-//   username?: string;
-//   password?: string;
-//   organization?: string;
-// }
+export const PROP_NAMES = {
+  HOST_URL: 'sonar.host.url',
+  LOGIN: 'sonar.login',
+  PASSSWORD: 'sonar.password',
+  ORG: 'sonar.organization',
+  PROJECTKEY: 'sonar.projectKey',
+  PROJECTNAME: 'sonar.projectName',
+  PROJECTVERSION: 'sonar.projectVersion',
+  PROJECTSOURCES: 'sonar.sources',
+  PROJECTSETTINGS: 'project.settings'
+};
 
 export default class Endpoint {
   constructor(public readonly url: string, public readonly token: string, public readonly organization: string) {}
-
-//   public get organization() {
-//     return this.organization;
-//   }
-
-//   public get url() {
-//     return this.url;
-//   }
-
-//   public get token() {
-//       return this.token;
-//   }
-
-//   public toJson() {
-//     return JSON.stringify({ type: this.type, data: this.data });
-//   }
 
   public toSonarProps() {
     return {

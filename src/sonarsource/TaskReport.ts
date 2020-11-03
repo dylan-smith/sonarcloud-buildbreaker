@@ -5,7 +5,6 @@ import * as glob from '@actions/glob';
 import Endpoint from './Endpoint';
 
 export const REPORT_TASK_NAME = 'report-task.txt';
-export const SONAR_TEMP_DIRECTORY_NAME = 'sonar';
 
 interface ITaskReport {
   ceTaskId: string;
@@ -26,17 +25,17 @@ export default class TaskReport {
     this.report = report as ITaskReport;
   }
 
-  public get projectKey() {
-    return this.report.projectKey;
-  }
+  // public get projectKey() {
+  //   return this.report.projectKey;
+  // }
 
   public get ceTaskId() {
     return this.report.ceTaskId;
   }
 
-  public get serverUrl() {
-    return this.report.serverUrl;
-  }
+  // public get serverUrl() {
+  //   return this.report.serverUrl;
+  // }
 
   public get dashboardUrl() {
     return this.report.dashboardUrl;
