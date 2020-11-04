@@ -3,7 +3,7 @@ This GitHub Action is based on a popular Azure DevOps task: https://marketplace.
 
 It will connect to SonarCloud, wait for your analysis job to complete, then either pass or fail your GitHub build based on the status of the SonarCloud Quality Gate.
 
-NOTE: If you are using SonarCloud use this action instead: https://github.com/dylan-smith/sonarcloud-buildbreaker
+NOTE: If you are using SonarQube use this action instead: https://github.com/dylan-smith/sonarqube-buildbreaker
 
 # Getting Started
 You need to pass this task your SonarCloud organization name, and SonarCloud token.  See instructions here for getting your SonarCloud token: https://docs.sonarqube.org/latest/user-guide/user-token/
